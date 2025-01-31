@@ -1,0 +1,553 @@
+<html><head><base href="." />
+<meta charset="UTF-8">
+<title>Vocabulary Riddle Adventure</title>
+<style>
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+    min-height: 100vh;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.game-container {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    padding: 2rem;
+    box-shadow: 0 0 20px rgba(0,0,0,0.3);
+    max-width: 600px;
+    width: 90%;
+    text-align: center;
+}
+
+.riddle-box {
+    background: #f5f5f5;
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin: 1rem 0;
+    font-size: 1.2rem;
+}
+
+.hint {
+    color: #666;
+    font-style: italic;
+    margin: 1rem 0;
+}
+
+input {
+    width: 80%;
+    padding: 0.8rem;
+    margin: 1rem 0;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+button {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: transform 0.2s;
+    margin: 0 0.5rem;
+}
+
+button:hover {
+    transform: scale(1.05);
+}
+
+.skip-button {
+    background: #ff9800;
+}
+
+.score {
+    font-size: 1.2rem;
+    color: #1a2a6c;
+    margin: 1rem 0;
+}
+
+.feedback {
+    margin: 1rem 0;
+    padding: 0.5rem;
+    border-radius: 5px;
+}
+
+.correct {
+    background: #dff0d8;
+    color: #3c763d;
+}
+
+.incorrect {
+    background: #f2dede;
+    color: #a94442;
+}
+
+.badge-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin: 1rem 0;
+    font-size: 1.1rem;
+    color: #1a2a6c;
+}
+
+.badge {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+}
+
+@keyframes celebrate {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.celebrate {
+    animation: celebrate 0.5s ease-in-out;
+}
+
+.footer {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid #ddd;
+    color: #666;
+    font-size: 0.9rem;
+    font-style: italic;
+}
+</style>
+</head>
+<body>
+<div class="game-container">
+    <h1>Vocabulary Riddles</h1>
+    <div class="score">Score: <span id="score">0</span></div>
+    <div class="badge-title">
+        <img class="badge" id="badge" style="display: none;" src="" alt="Achievement Badge">
+        <span id="title"></span>
+    </div>
+    <div class="riddle-box">
+        <p id="riddle">Loading riddle...</p>
+        <p class="hint" id="hint"></p>
+    </div>
+    <input type="text" id="answer" placeholder="Type your answer here..." autocomplete="off">
+    <div class="button-group">
+        <button onclick="checkAnswer()">Submit Answer</button>
+        <button onclick="skipRiddle()" class="skip-button">Skip Riddle</button>
+    </div>
+    <div id="feedback" class="feedback"></div>
+    <div class="footer">
+        Author: Aaron Shi. Released in 2024. Last Update on December 8, 2024.
+    </div>
+</div>
+
+<script>
+const riddles = [
+    {
+        riddle: "I am taken from a mine and shut up in a wooden case, from which I am never released, and yet I am used by everyone.",
+        answer: "pencil",
+        hint: "You write with me"
+    },
+    {
+        riddle: "I have cities, but no houses. I have mountains, but no trees. I have water, but no fish. I have roads, but no cars. What am I?",
+        answer: "map",
+        hint: "I help you navigate"
+    },
+    {
+        riddle: "I am not alive, but I grow; I don't have lungs, but I need air; I don't have a mouth, but water kills me. What am I?",
+        answer: "fire",
+        hint: "I give warmth and light"
+    },
+    {
+        riddle: "What starts with an 'E', ends with an 'E', but typically contains only one letter?",
+        answer: "envelope",
+        hint: "You use me to send mail"
+    },
+    {
+        riddle: "The more you take, the more you leave behind. What am I?",
+        answer: "footsteps",
+        hint: "You make these when you walk"
+    },
+    {
+        "riddle": "I have keys but no locks. I have space but no room. You can enter, but you can't go outside. What am I?",
+        "answer": "keyboard",
+        "hint": "You type on me"
+    },
+    {
+        "riddle": "I speak without a mouth and hear without ears. I have no body, but I come alive with the wind. What am I?",
+        "answer": "echo",
+        "hint": "You hear me repeat your words"
+    },
+    {
+        "riddle": "I’m light as a feather, yet the strongest person can’t hold me for very long. What am I?",
+        "answer": "breath",
+        "hint": "You need me to live"
+    },
+    {
+        "riddle": "I am always running but never move. I have a bed but never sleep. What am I?",
+        "answer": "river",
+        "hint": "I flow through valleys and mountains"
+    },
+    {
+        "riddle": "I am always in front of you but can never be seen. What am I?",
+        "answer": "future",
+        "hint": "I haven’t happened yet"
+    },
+    {
+        "riddle": "I fly without wings. I cry without eyes. Wherever I go, darkness flies. What am I?",
+        "answer": "cloud",
+        "hint": "You see me in the sky"
+    },
+    {
+        "riddle": "I have hands but no thumbs, a face but no eyes. What am I?",
+        "answer": "clock",
+        "hint": "I help you tell time"
+    },
+    {
+        "riddle": "The more you take out of me, the bigger I become. What am I?",
+        "answer": "hole",
+        "hint": "You dig me"
+    },
+    {
+        "riddle": "I shrink when I am old but I was once tall when I was young. What am I?",
+        "answer": "candle",
+        "hint": "I give light and melt"
+    },
+    {
+        "riddle": "I’m full of holes, but I can still hold water. What am I?",
+        "answer": "sponge",
+        "hint": "You use me for cleaning"
+    },
+    {
+        "riddle": "I go up but never come down. What am I?",
+        "answer": "age",
+        "hint": "I increase as time passes"
+    },
+    {
+        "riddle": "I’m white and used to build a snowman, but I melt when the sun is out. What am I?",
+        "answer": "snow",
+        "hint": "I fall from the sky in winter"
+    },
+    {
+        "riddle": "I have a head, a tail, but no body. What am I?",
+        "answer": "coin",
+        "hint": "You use me to pay"
+    },
+    {
+        "riddle": "I have no life, but I can die. What am I?",
+        "answer": "battery",
+        "hint": "I give power to devices"
+    },
+    {
+        "riddle": "I can be cracked, made, told, and played. What am I?",
+        "answer": "joke",
+        "hint": "I make people laugh"
+    },
+    {
+        "riddle": "I can fill a room but take up no space. What am I?",
+        "answer": "light",
+        "hint": "I let you see in the dark"
+    },
+    {
+        "riddle": "I travel the world while staying in the same spot. What am I?",
+        "answer": "stamp",
+        "hint": "I’m stuck to a letter"
+    },
+    {
+        "riddle": "I have roots but never grow. I have a trunk but no leaves. What am I?",
+        "answer": "car",
+        "hint": "I take you places"
+    },
+    {
+        "riddle": "I have a face and two hands, but I can’t hold anything or smile. What am I?",
+        "answer": "clock",
+        "hint": "I help you tell time"
+    },
+    {
+        "riddle": "I can fill a whole house but take up no space. What am I?",
+        "answer": "air",
+        "hint": "You breathe me in"
+    },
+    {
+        "riddle": "I can be broken without being touched. What am I?",
+        "answer": "promise",
+        "hint": "People make me to keep or break"
+    },
+    {
+        "riddle": "I am heavy forward but backward I’m not. What am I?",
+        "answer": "ton",
+        "hint": "I’m a unit of weight"
+    },
+    {
+        "riddle": "The more you remove from me, the bigger I get. What am I?",
+        "answer": "hole",
+        "hint": "You dig me in the ground"
+    },
+    {
+        "riddle": "I have four legs but can’t walk. What am I?",
+        "answer": "table",
+        "hint": "You use me to hold things"
+    },
+    {
+        "riddle": "I get sharper the more you use me, but I’m not a knife. What am I?",
+        "answer": "pencil",
+        "hint": "You write with me"
+    },
+    {
+        "riddle": "I fly all day but stay in the same place. What am I?",
+        "answer": "flag",
+        "hint": "I wave in the wind"
+    },
+    {
+        "riddle": "I have a heart that doesn’t beat. What am I?",
+        "answer": "artichoke",
+        "hint": "I’m a vegetable"
+    },
+    {
+        "riddle": "I have branches but no leaves, no trunk, and no fruit. What am I?",
+        "answer": "bank",
+        "hint": "You keep money with me"
+    },
+    {
+        "riddle": "I’m round and have two hands. What am I?",
+        "answer": "clock",
+        "hint": "I tell time"
+    },
+    {
+        "riddle": "I go up and down without moving. What am I?",
+        "answer": "stairs",
+        "hint": "You walk on me to change levels"
+    },
+    {
+        "riddle": "I have a bed but never sleep. What am I?",
+        "answer": "river",
+        "hint": "I flow continuously"
+    },
+    {
+        "riddle": "The more you share me, the less you have. What am I?",
+        "answer": "secret",
+        "hint": "People whisper me"
+    },
+    {
+        "riddle": "I’m tall when I’m young, and I get shorter as I age. What am I?",
+        "answer": "pencil",
+        "hint": "You write with me"
+    },
+    {
+        "riddle": "I’m black when I’m clean, and white when I’m dirty. What am I?",
+        "answer": "chalkboard",
+        "hint": "You find me in classrooms"
+    },
+    {
+        "riddle": "I can travel faster than sound. What am I?",
+        "answer": "light",
+        "hint": "You see me before you hear thunder"
+    },
+    {
+        "riddle": "I start with the letter ‘P,’ and I end with the letter ‘E.’ I’m a tasty treat. What am I?",
+        "answer": "pie",
+        "hint": "I’m often eaten with ice cream"
+    },
+    {
+        "riddle": "I’m not alive, but I can grow. I don’t have lungs, but I need air. What am I?",
+        "answer": "fire",
+        "hint": "I burn and give warmth"
+    },
+    {
+        "riddle": "I come down but never go up. What am I?",
+        "answer": "rain",
+        "hint": "I fall from the sky"
+    },
+    {
+        "riddle": "I’m a type of tree you carry in your hand. What am I?",
+        "answer": "palm",
+        "hint": "You have me on your hand"
+    },
+    {
+        "riddle": "I’m something you buy to eat but never actually eat. What am I?",
+        "answer": "plate",
+        "hint": "You put food on me"
+    },
+    {
+        "riddle": "I’m an odd number. Take away one letter, and I become even. What am I?",
+        "answer": "seven",
+        "hint": "I’m between six and eight"
+    },
+    {
+        "riddle": "I am an instrument you can hear but cannot touch or see. What am I?",
+        "answer": "voice",
+        "hint": "You use me to speak"
+    },
+    {
+        "riddle": "I get wetter the more I dry. What am I?",
+        "answer": "towel",
+        "hint": "You use me after a shower"
+    },
+    {
+        "riddle": "I’m the month with 28 days. What am I?",
+        "answer": "all months",
+        "hint": "Think carefully about the calendar"
+    },
+    {
+        "riddle": "I’m not a bird, but I can fly. I have no wings, but I soar. What am I?",
+        "answer": "kite",
+        "hint": "Children love to play with me on windy days"
+    },
+    {
+        "riddle": "I can be as small as an ant or as big as an elephant, but I weigh nothing. What am I?",
+        "answer": "shadow",
+        "hint": "I follow you around in sunlight"
+    },
+    {
+        "riddle": "I have no teeth but can bite. What am I?",
+        "answer": "frost",
+        "hint": "I appear on cold mornings"
+    },
+    {
+        "riddle": "I’m flat when I’m new, but I get rounder the more you use me. What am I?",
+        "answer": "coin",
+        "hint": "You use me for spending money"
+    },
+    {
+        "riddle": "I can hold water even though I have holes. What am I?",
+        "answer": "net",
+        "hint": "You use me for fishing"
+    },
+    {
+        "riddle": "I have a spine but no bones. What am I?",
+        "answer": "book",
+        "hint": "You read me to learn or escape"
+    },
+    {
+        "riddle": "I’m not a food, but I’m sweet. What am I?",
+        "answer": "honey",
+        "hint": "Bees make me"
+    },
+    {
+        "riddle": "I’m a word that becomes shorter when you add two letters to me. What am I?",
+        "answer": "short",
+        "hint": "Think about my meaning"
+    },
+    {
+        "riddle": "I can be opened but never closed. What am I?",
+        "answer": "egg",
+        "hint": "You crack me to cook"
+    },
+    {
+        "riddle": "I fly without wings and cry without eyes. What am I?",
+        "answer": "wind",
+        "hint": "I’m always moving around you"
+    },
+    {
+        "riddle": "I can be long or short, and people often write me. What am I?",
+        "answer": "story",
+        "hint": "I entertain or inform"
+    },
+    {
+        "riddle": "I’m tall in the morning and short at noon, but by evening, I’m gone. What am I?",
+        "answer": "shadow",
+        "hint": "I follow the sun"
+    },
+    {
+        "riddle": "I have no color but come in many shades. What am I?",
+        "answer": "light",
+        "hint": "I help you see"
+    }
+];
+
+let availableRiddles = [...Array(riddles.length).keys()];
+let score = 0;
+let solvedRiddles = 0;
+let currentRiddleIndex = 0;
+
+function shuffleRiddles() {
+    if (availableRiddles.length === 0) {
+        availableRiddles = [...Array(riddles.length).keys()];
+    }
+    const randomIndex = Math.floor(Math.random() * availableRiddles.length);
+    currentRiddleIndex = availableRiddles[randomIndex];
+    availableRiddles.splice(randomIndex, 1);
+}
+
+function updateTitle() {
+    const badge = document.getElementById('badge');
+    const titleSpan = document.getElementById('title');
+    let title = '';
+    let badgeUrl = '';
+
+    if (solvedRiddles >= 20) {
+        title = "Master-Level Riddle Solver";
+        badgeUrl = "https://alittlemoreenglish.weebly.com/uploads/2/6/6/3/26638990/master-riddle-solver-icon_orig.jpg";
+    } else if (solvedRiddles >= 15) {
+        title = "Advanced-Level Riddle Solver";
+        badgeUrl = "https://alittlemoreenglish.weebly.com/uploads/2/6/6/3/26638990/advanced-level-riddle-solver-icon_orig.jpg";
+    } else if (solvedRiddles >= 10) {
+        title = "Intermediate-Level Riddle Solver";
+        badgeUrl = "https://alittlemoreenglish.weebly.com/uploads/2/6/6/3/26638990/intermediate-level-riddle-solver-icon_orig.jpg";
+    } else if (solvedRiddles >= 5) {
+        title = "Elementary-Level Riddle Solver";
+        badgeUrl = "https://alittlemoreenglish.weebly.com/uploads/2/6/6/3/26638990/elementary-level-riddle-solver-icon_orig.jpg";
+    }
+
+    if (title) {
+        badge.style.display = "inline";
+        badge.src = badgeUrl;
+        titleSpan.textContent = title;
+    }
+}
+
+function loadRiddle() {
+    shuffleRiddles();
+    document.getElementById('riddle').textContent = riddles[currentRiddleIndex].riddle;
+    document.getElementById('hint').textContent = "Hint: " + riddles[currentRiddleIndex].hint;
+    document.getElementById('answer').value = '';
+    document.getElementById('feedback').textContent = '';
+    document.getElementById('feedback').className = 'feedback';
+}
+
+function skipRiddle() {
+    const feedbackDiv = document.getElementById('feedback');
+    feedbackDiv.textContent = "Riddle skipped. The answer was: " + riddles[currentRiddleIndex].answer;
+    feedbackDiv.className = 'feedback incorrect';
+    setTimeout(loadRiddle, 2000);
+}
+
+function checkAnswer() {
+    const userAnswer = document.getElementById('answer').value.toLowerCase().trim();
+    const correctAnswer = riddles[currentRiddleIndex].answer;
+    const feedbackDiv = document.getElementById('feedback');
+    
+    if (userAnswer === correctAnswer) {
+        score += 10;
+        solvedRiddles++;
+        document.getElementById('score').textContent = score;
+        updateTitle();
+        feedbackDiv.textContent = "Correct! Well done!";
+        feedbackDiv.className = 'feedback correct';
+        document.querySelector('.game-container').classList.add('celebrate');
+        setTimeout(() => {
+            document.querySelector('.game-container').classList.remove('celebrate');
+        }, 500);
+        
+        setTimeout(loadRiddle, 1000);
+    } else {
+        feedbackDiv.textContent = "Sorry, that's not correct. Try again!";
+        feedbackDiv.className = 'feedback incorrect';
+    }
+}
+
+document.getElementById('answer').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        checkAnswer();
+    }
+});
+
+// Initial load
+loadRiddle();
+</script>
+</body></html>
